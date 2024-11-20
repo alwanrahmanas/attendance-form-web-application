@@ -1,20 +1,39 @@
 version: "3.8"
 
 services:
-  app-absensi:
-    image: python:3.10-slim
-    container_name: app-absensi-container
-    working_dir: /app
-    volumes:
-      - ./app:/app
+  app-prod:
+    image: "${APP_IMAGE}:${APP_TAG}"
+    restart: always
     ports:
       - 5000:5000
-    entrypoint: ["sh", "-c", "pip install -r requirements.txt && python app.py"]
     env_file:
       - .env
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
+    networks:
+      - absensi
+
+  app-staging:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 5001:5000
+    env_file:
+      - .env
+    networks:
+      - absensi
+
+  app-dev:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - database-absensi
+    ports:
+      - 5002:5000
+    env_file:
+      - .env
     networks:
       - absensi
 
@@ -25,7 +44,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - 5434:5432
+      - 5433:5432
     env_file:
       - .env
     volumes:
